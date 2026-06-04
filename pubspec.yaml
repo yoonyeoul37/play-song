@@ -1,0 +1,43 @@
+name: mp3_player
+description: Local MP3 Player App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  just_audio: ^0.9.36
+  audio_service: ^0.18.15
+  permission_handler: ^11.3.0
+  provider: ^6.1.2
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.3.2
+  http: ^1.2.2
+  torch_light: ^1.0.0
+  url_launcher: ^6.3.0
+  video_player: ^2.9.2
+  chewie: ^1.8.5
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/play_song.png"
+  adaptive_icon_background: "#1A1A1A"
+  adaptive_icon_foreground: "assets/icon_no_bg.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/play_song.png
+    - assets/icon_no_bg.png

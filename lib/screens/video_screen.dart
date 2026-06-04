@@ -1,0 +1,522 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:chewie/chewie.dart';
+import 'package:video_player/video_player.dart';
+import '../providers/video_provider.dart';
+import '../models/video.dart';
+import '../theme/app_theme.dart';
+
+class VideoScreen extends StatelessWidget {
+  const VideoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final videoProvider = context.watch<VideoProvider>();
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    if (videoProvider.isLoading) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(
+          child: CircularProgressIndicator(color: primaryColor),
+        ),
+      );
+    }
+
+    if (videoProvider.videos.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.video_library_outlined,
+                  size: 72, color: primaryColor.withOpacity(0.4)),
+              const SizedBox(height: 16),
+              const Text('동영상이 없습니다',
+                  style: TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 16)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            floating: true,
+            snap: true,
+            backgroundColor: AppTheme.background,
+            expandedHeight: 80 * MediaQuery.of(context).textScaler.scale(1.0),
+            flexibleSpace: FlexibleSpaceBar(
+              background: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('동영상',
+                          style: TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                      Text('${videoProvider.videos.length}개',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(8),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.5,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return _VideoTile(
+                      video: videoProvider.videos[index],
+                      primaryColor: primaryColor);
+                },
+                childCount: videoProvider.videos.length,
+              ),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+        ],
+      ),
+    );
+  }
+}
+
+class _VideoTile extends StatefulWidget {
+  final Video video;
+  final Color primaryColor;
+
+  const _VideoTile({required this.video, required this.primaryColor});
+
+  @override
+  State<_VideoTile> createState() => _VideoTileState();
+}
+
+class _VideoTileState extends State<_VideoTile> {
+  static const _channel = MethodChannel('com.example.mp3_player/media');
+  Uint8List? _thumbnail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThumbnail();
+  }
+
+  Future<void> _loadThumbnail() async {
+    try {
+      final result = await _channel.invokeMethod('getVideoThumbnail', {
+        'path': widget.video.uri,
+      });
+      if (result != null && mounted) {
+        setState(() {
+          _thumbnail = Uint8List.fromList(List<int>.from(result));
+        });
+      }
+    } catch (e) {
+      // 썸네일 로드 실패
+    }
+  }
+
+  Future<void> _showOptions(BuildContext context) async {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceVariant,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(Icons.edit, color: primaryColor),
+            title: const Text('이름 변경',
+                style: TextStyle(color: AppTheme.textPrimary)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _renameVideo(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete, color: Colors.redAccent),
+            title: const Text('삭제',
+                style: TextStyle(color: AppTheme.textPrimary)),
+            onTap: () {
+              Navigator.pop(ctx);
+              _deleteVideo(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _renameVideo(BuildContext context) async {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final controller = TextEditingController(text: widget.video.titleDisplay);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text('이름 변경',
+            style: TextStyle(color: AppTheme.textPrimary)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: const TextStyle(color: AppTheme.textPrimary),
+          decoration: InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: primaryColor)),
+            focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: primaryColor)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소',
+                style: TextStyle(color: AppTheme.textHint)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: Text('변경', style: TextStyle(color: primaryColor)),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty) {
+      try {
+        await _channel.invokeMethod('renameVideo', {
+                  'uri': widget.video.uri,
+                  'newName': newName,
+                });
+        context.read<VideoProvider>().loadVideos();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('이름이 변경됐습니다'),
+            backgroundColor: AppTheme.surfaceVariant,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('이름 변경 실패: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteVideo(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text('동영상 삭제',
+            style: TextStyle(color: AppTheme.textPrimary)),
+        content: Text('${widget.video.titleDisplay}을 삭제할까요?',
+            style: const TextStyle(color: AppTheme.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('취소',
+                style: TextStyle(color: AppTheme.textHint)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('삭제',
+                style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _channel.invokeMethod('deleteVideo', {'uri': widget.video.uri});
+        context.read<VideoProvider>().loadVideos();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('삭제됐습니다'),
+            backgroundColor: Colors.redAccent,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('삭제 실패: $e')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: () => _showOptions(context),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VideoPlayerScreen(video: widget.video),
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
+                child: _thumbnail != null
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.memory(
+                            _thumbnail!,
+                            fit: BoxFit.cover,
+                          ),
+                          Center(
+                            child: Icon(
+                              Icons.play_circle_outline,
+                              color: Colors.white.withOpacity(0.8),
+                              size: 36,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Container(
+                        color: AppTheme.surfaceVariant,
+                        child: Center(
+                          child: Icon(Icons.play_circle_outline,
+                              color: widget.primaryColor.withOpacity(0.7),
+                              size: 40),
+                        ),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.video.titleDisplay,
+                      style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    widget.video.durationFormatted,
+                    style: const TextStyle(
+                        color: AppTheme.textHint, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class VideoPlayerScreen extends StatefulWidget {
+  final Video video;
+  const VideoPlayerScreen({super.key, required this.video});
+
+  @override
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+}
+
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late VideoPlayerController _videoPlayerController;
+  ChewieController? _chewieController;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    _videoPlayerController = VideoPlayerController.file(
+      File(widget.video.uri),
+    );
+
+    await _videoPlayerController.initialize();
+
+    _chewieController = ChewieController(
+      videoPlayerController: _videoPlayerController,
+      autoPlay: true,
+      looping: false,
+      allowFullScreen: true,
+      allowMuting: true,
+      showControls: true,
+      showOptions: false,
+    );
+
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController.dispose();
+    _chewieController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text(widget.video.titleDisplay,
+            style: const TextStyle(color: Colors.white)),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+        ),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: const Color(0xFF2A2A2A),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+            itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'rename',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, color: Colors.white, size: 18),
+                                SizedBox(width: 10),
+                                Text('이름 변경', style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.redAccent, size: 18),
+                    SizedBox(width: 10),
+                    Text('삭제', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) async {
+                          if (value == 'rename') {
+                            final controller = TextEditingController(text: widget.video.titleDisplay);
+                            final newName = await showDialog<String>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppTheme.surfaceVariant,
+                                title: const Text('이름 변경',
+                                    style: TextStyle(color: AppTheme.textPrimary)),
+                                content: TextField(
+                                  controller: controller,
+                                  autofocus: true,
+                                  style: const TextStyle(color: AppTheme.textPrimary),
+                                  decoration: const InputDecoration(
+                                    enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.white)),
+                                    focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.white)),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('취소',
+                                        style: TextStyle(color: AppTheme.textHint)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, controller.text),
+                                    child: const Text('변경',
+                                        style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (newName != null && newName.isNotEmpty) {
+                              await const MethodChannel('com.example.mp3_player/media')
+                                  .invokeMethod('renameVideo', {
+                                'uri': widget.video.uri,
+                                'newName': newName,
+                              });
+                              Navigator.pop(context);
+                            }
+                          } else if (value == 'delete') {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppTheme.surfaceVariant,
+                    title: const Text('동영상 삭제',
+                        style: TextStyle(color: AppTheme.textPrimary)),
+                    content: Text('${widget.video.titleDisplay}을 삭제할까요?',
+                        style:
+                            const TextStyle(color: AppTheme.textSecondary)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('취소',
+                            style: TextStyle(color: AppTheme.textHint)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('삭제',
+                            style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  await const MethodChannel('com.example.mp3_player/media')
+                      .invokeMethod(
+                          'deleteVideo', {'uri': widget.video.uri});
+                  Navigator.pop(context);
+                }
+              }
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: _chewieController != null
+              ? Chewie(controller: _chewieController!)
+              : const CircularProgressIndicator(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
