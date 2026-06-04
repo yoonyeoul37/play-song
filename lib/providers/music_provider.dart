@@ -99,18 +99,17 @@ void updateSongInfo(Song song, {String? title, String? artist, String? album}) {
   bool isFavorite(int songId) => _favoriteIds.contains(songId);
 
   Future<bool> _requestPermissions() async {
-    final audioStatus = await Permission.audio.request();
-    if (audioStatus.isGranted) {
+    try {
+      final statuses = await [
+        Permission.audio,
+        Permission.storage,
+      ].request();
+      _hasPermission = true;
+      return true;
+    } catch (e) {
       _hasPermission = true;
       return true;
     }
-    final storageStatus = await Permission.storage.request();
-    if (storageStatus.isGranted) {
-      _hasPermission = true;
-      return true;
-    }
-    _hasPermission = true;
-    return true;
   }
 
   Future<void> loadSongs() async {

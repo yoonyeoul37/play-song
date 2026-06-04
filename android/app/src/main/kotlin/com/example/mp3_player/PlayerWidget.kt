@@ -22,32 +22,15 @@ class PlayerWidget : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
-            ACTION_PLAY_PAUSE -> {
-                val keyEvent = android.view.KeyEvent(
-                    android.view.KeyEvent.ACTION_DOWN,
-                    android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+            ACTION_PLAY_PAUSE, ACTION_NEXT, ACTION_PREV -> {
+                val i = Intent(context, MainActivity::class.java)
+                i.action = intent.action
+                i.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 )
-                val mediaIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
-                mediaIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyEvent)
-                context.sendOrderedBroadcast(mediaIntent, null)
-            }
-            ACTION_NEXT -> {
-                val keyEvent = android.view.KeyEvent(
-                    android.view.KeyEvent.ACTION_DOWN,
-                    android.view.KeyEvent.KEYCODE_MEDIA_NEXT
-                )
-                val mediaIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
-                mediaIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyEvent)
-                context.sendOrderedBroadcast(mediaIntent, null)
-            }
-            ACTION_PREV -> {
-                val keyEvent = android.view.KeyEvent(
-                    android.view.KeyEvent.ACTION_DOWN,
-                    android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS
-                )
-                val mediaIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
-                mediaIntent.putExtra(Intent.EXTRA_KEY_EVENT, keyEvent)
-                context.sendOrderedBroadcast(mediaIntent, null)
+                context.startActivity(i)
             }
         }
     }
@@ -66,7 +49,6 @@ class PlayerWidget : AppWidgetProvider() {
             isPlaying: Boolean = false
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_player)
-
             views.setTextViewText(R.id.widget_title, title)
             views.setTextViewText(R.id.widget_artist, artist)
 
@@ -76,7 +58,9 @@ class PlayerWidget : AppWidgetProvider() {
                 android.R.drawable.ic_media_play
             views.setImageViewResource(R.id.widget_play_pause, playPauseIcon)
 
-            val openIntent = Intent(context, MainActivity::class.java)
+            val openIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
             val openPendingIntent = PendingIntent.getActivity(
                 context, 0, openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

@@ -100,8 +100,11 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MusicProvider>().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final musicProvider = context.read<MusicProvider>();
+      if (musicProvider.songs.isEmpty && !musicProvider.isLoading) {
+        await musicProvider.initialize();
+      }
     });
   }
 

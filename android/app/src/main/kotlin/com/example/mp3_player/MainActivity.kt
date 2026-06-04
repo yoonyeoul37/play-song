@@ -29,6 +29,33 @@ class MainActivity : AudioServiceActivity() {
         }
     }
 
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        when (intent.action) {
+            PlayerWidget.ACTION_PLAY_PAUSE -> {
+                val channel = io.flutter.plugin.common.MethodChannel(
+                    flutterEngine?.dartExecutor?.binaryMessenger ?: return,
+                    "com.example.mp3_player/media"
+                )
+                channel.invokeMethod("widgetPlayPause", null)
+            }
+            PlayerWidget.ACTION_NEXT -> {
+                val channel = io.flutter.plugin.common.MethodChannel(
+                    flutterEngine?.dartExecutor?.binaryMessenger ?: return,
+                    "com.example.mp3_player/media"
+                )
+                channel.invokeMethod("widgetNext", null)
+            }
+            PlayerWidget.ACTION_PREV -> {
+                val channel = io.flutter.plugin.common.MethodChannel(
+                    flutterEngine?.dartExecutor?.binaryMessenger ?: return,
+                    "com.example.mp3_player/media"
+                )
+                channel.invokeMethod("widgetPrev", null)
+            }
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
@@ -120,6 +147,56 @@ class MainActivity : AudioServiceActivity() {
                             result.success(false)
                         }
                     } else result.success(false)
+                }
+                "widgetPlayPause" -> {
+                    result.success(true)
+                }
+                "widgetNext" -> {
+                    result.success(true)
+                }
+                "widgetPrev" -> {
+                    result.success(true)
+                }
+                "requestWidgetAdd" -> {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
+                        val provider = android.content.ComponentName(this, PlayerWidget::class.java)
+                        if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                            appWidgetManager.requestPinAppWidget(provider, null, null)
+                            result.success(true)
+                        } else {
+                            result.success(false)
+                        }
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "requestWidgetAdd" -> {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
+                        val provider = android.content.ComponentName(this, PlayerWidget::class.java)
+                        if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                            appWidgetManager.requestPinAppWidget(provider, null, null)
+                            result.success(true)
+                        } else {
+                            result.success(false)
+                        }
+                    } else {
+                        result.success(false)
+                    }
+                }
+                "updateWidget" -> {
+                    val title = call.argument<String>("title") ?: "플레이쏭"
+                    val artist = call.argument<String>("artist") ?: "음악을 재생해보세요"
+                    val isPlaying = call.argument<Boolean>("isPlaying") ?: false
+                    val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(this)
+                    val ids = appWidgetManager.getAppWidgetIds(
+                        android.content.ComponentName(this, PlayerWidget::class.java)
+                    )
+                    for (id in ids) {
+                        PlayerWidget.updateAppWidget(this, appWidgetManager, id, title, artist, isPlaying)
+                    }
+                    result.success(true)
                 }
                 else -> result.notImplemented()
             }

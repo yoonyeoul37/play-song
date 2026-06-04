@@ -33,10 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-   WidgetsBinding.instance.addPostFrameCallback((_) async {
-         await context.read<MusicProvider>().initialize();
-         context.read<VideoProvider>().loadVideos();
-       });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final musicProvider = context.read<MusicProvider>();
+      if (musicProvider.songs.isEmpty && !musicProvider.isLoading) {
+        await musicProvider.initialize();
+        context.read<VideoProvider>().loadVideos();
+      }
+    });
   }
 
   @override

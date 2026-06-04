@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torch_light/torch_light.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 import '../providers/theme_provider.dart';
 import '../theme/app_theme.dart';
 import 'ringtone_screen.dart';
@@ -151,7 +152,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.widgets_outlined,
                 title: '홈화면 위젯',
                 subtitle: '홈화면에 플레이어 위젯 추가',
-                onTap: () {},
+                onTap: () async {
+                  final platform = MethodChannel('com.example.mp3_player/media');
+                  try {
+                    await platform.invokeMethod('requestWidgetAdd');
+                  } catch (e) {}
+                },
                 primaryColor: primaryColor,
               ),
             ],
@@ -200,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: '개인정보처리방침',
                 subtitle: '개인정보 수집 및 이용 안내',
                 onTap: () =>
-                    _launchUrl('https://your-url.com/privacy_policy.html'),
+                    _launchUrl('https://yoonyeoul37.github.io/play-song/privacy_policy.html'),
                 primaryColor: primaryColor,
               ),
               _buildTileDivider(),
@@ -210,7 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: '이용약관',
                 subtitle: '서비스 이용 약관',
                 onTap: () =>
-                    _launchUrl('https://your-url.com/terms_of_service.html'),
+                   _launchUrl('https://yoonyeoul37.github.io/play-song/terms_of_service.html'),
                 primaryColor: primaryColor,
               ),
             ],
@@ -518,12 +524,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+Future<void> _launchUrl(String url) async {
+  final uri = Uri.parse(url);
+  try {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (e) {
+    await launchUrl(uri, mode: LaunchMode.inAppWebView);
   }
+}
 
   void _showColorPicker(BuildContext context) {
     final themeProvider = context.read<ThemeProvider>();
@@ -743,7 +751,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Slider(
                                   value: themeProvider.textScale,
                                   min: 0.8,
-                                  max: 1.4,
+                                  max: 1.5,
                   divisions: 6,
                   label: '${(themeProvider.textScale * 100).toInt()}%',
                   onChanged: (value) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_service/audio_service.dart';
 import '../models/song.dart';
@@ -9,6 +10,7 @@ class PlayerProvider extends ChangeNotifier {
   AudioHandler? _audioHandler;
   Function(Song)? onSongPlayed;
   Function(Song)? onSongChanged;
+  static const _channel = MethodChannel('com.example.mp3_player/media');
 
   List<Song> _queue = [];
   int _currentIndex = -1;
@@ -21,8 +23,8 @@ class PlayerProvider extends ChangeNotifier {
   LoopMode _loopMode = LoopMode.off;
   Timer? _positionTimer;
   Timer? _sleepTimer;
-   Duration? _sleepTimerDuration;
-   DateTime? _sleepTimerEnd;
+  Duration? _sleepTimerDuration;
+  DateTime? _sleepTimerEnd;
 
   Song? get currentSong =>
       (_currentIndex >= 0 && _currentIndex < _queue.length)
@@ -39,8 +41,8 @@ class PlayerProvider extends ChangeNotifier {
   bool get hasNext => _currentIndex < _queue.length - 1;
   AudioPlayer get player => _player;
   Duration? get sleepTimerDuration => _sleepTimerDuration;
-    DateTime? get sleepTimerEnd => _sleepTimerEnd;
-    bool get isSleepTimerActive => _sleepTimer != null;
+  DateTime? get sleepTimerEnd => _sleepTimerEnd;
+  bool get isSleepTimerActive => _sleepTimer != null;
 
   double get progress {
     if (_duration.inMilliseconds == 0) return 0.0;
@@ -49,10 +51,42 @@ class PlayerProvider extends ChangeNotifier {
 
   PlayerProvider() {
     _initStreams();
+    _initWidgetChannel();
+  }
+
+  void _initWidgetChannel() {
+    _channel.setMethodCallHandler((call) async {
+      switch (call.method) {
+        case 'widgetPlayPause':
+          await togglePlayPause();
+          break;
+        case 'widgetNext':
+          await playNext();
+          break;
+        case 'widgetPrev':
+          await playPrevious();
+          break;
+      }
+      return null;
+    });
   }
 
   void setAudioHandler(AudioHandler handler) {
     _audioHandler = handler;
+  }
+
+  void handleWidgetAction(String action) {
+    switch (action) {
+      case 'widgetPlayPause':
+        togglePlayPause();
+        break;
+      case 'widgetNext':
+        playNext();
+        break;
+      case 'widgetPrev':
+        playPrevious();
+        break;
+    }
   }
 
   void _startPositionTimer() {
@@ -78,6 +112,7 @@ class PlayerProvider extends ChangeNotifier {
       } else {
         _stopPositionTimer();
       }
+      _updateWidgetPlayState(playing);
       notifyListeners();
     });
 
@@ -150,6 +185,7 @@ class PlayerProvider extends ChangeNotifier {
       await _player.play();
       onSongPlayed?.call(song);
       onSongChanged?.call(song);
+      _updateWidgetSongInfo(song);
     } catch (e) {
       debugPrint('재생 오류: $e');
       _isLoading = false;
@@ -158,14 +194,36 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
+  void _updateWidgetSongInfo(Song song) {
+    try {
+      _channel.invokeMethod('updateWidget', {
+        'title': song.titleDisplay,
+        'artist': song.artistDisplay,
+        'isPlaying': true,
+      });
+    } catch (e) {}
+  }
+
+  void _updateWidgetPlayState(bool isPlaying) {
+    try {
+      final song = currentSong;
+      _channel.invokeMethod('updateWidget', {
+        'title': song?.titleDisplay ?? '플레이쏭',
+        'artist': song?.artistDisplay ?? '음악을 재생해보세요',
+        'isPlaying': isPlaying,
+      });
+    } catch (e) {}
+  }
+
   void addToPlayNext(Song song) {
-      if (_currentIndex >= 0 && _currentIndex < _queue.length) {
-        _queue.insert(_currentIndex + 1, song);
-      } else {
-        _queue.add(song);
-      }
-      notifyListeners();
+    if (_currentIndex >= 0 && _currentIndex < _queue.length) {
+      _queue.insert(_currentIndex + 1, song);
+    } else {
+      _queue.add(song);
     }
+    notifyListeners();
+  }
+
   Future<void> playFromList(List<Song> songs, int index) async {
     _queue = List.from(songs);
     await _playAtIndex(index);
@@ -198,10 +256,11 @@ class PlayerProvider extends ChangeNotifier {
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
-      _playbackSpeed = speed;
-      await _player.setSpeed(speed);
-      notifyListeners();
-    }
+    _playbackSpeed = speed;
+    await _player.setSpeed(speed);
+    notifyListeners();
+  }
+
   void toggleShuffle() {
     _isShuffled = !_isShuffled;
     if (_isShuffled) {
@@ -213,80 +272,79 @@ class PlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
- void toggleLoopMode() {
-     switch (_loopMode) {
-       case LoopMode.off:
-         _loopMode = LoopMode.all;
-         break;
-       case LoopMode.all:
-         _loopMode = LoopMode.one;
-         break;
-       case LoopMode.one:
-         _loopMode = LoopMode.off;
-         break;
-     }
-     notifyListeners();
-   }
+  void toggleLoopMode() {
+    switch (_loopMode) {
+      case LoopMode.off:
+        _loopMode = LoopMode.all;
+        break;
+      case LoopMode.all:
+        _loopMode = LoopMode.one;
+        break;
+      case LoopMode.one:
+        _loopMode = LoopMode.off;
+        break;
+    }
+    notifyListeners();
+  }
 
-   void setLoopMode(LoopMode mode) {
-     _loopMode = mode;
-     notifyListeners();
-   }
+  void setLoopMode(LoopMode mode) {
+    _loopMode = mode;
+    notifyListeners();
+  }
 
- String formatDuration(Duration d) {
-   final hours = d.inHours;
-   final minutes = d.inMinutes % 60;
-   final seconds = d.inSeconds % 60;
-   if (hours > 0) {
-     return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-   }
-   return '$minutes:${seconds.toString().padLeft(2, '0')}';
- }
+  String formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes % 60;
+    final seconds = d.inSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
 
- void setSleepTimer(Duration duration) {
-     _sleepTimer?.cancel();
-     _sleepTimerDuration = duration;
-     _sleepTimerEnd = DateTime.now().add(duration);
-     _sleepTimer = Timer(duration, () {
-       _player.pause();
-       _sleepTimer = null;
-       _sleepTimerDuration = null;
-       _sleepTimerEnd = null;
-       notifyListeners();
-     });
-     notifyListeners();
-   }
+  void setSleepTimer(Duration duration) {
+    _sleepTimer?.cancel();
+    _sleepTimerDuration = duration;
+    _sleepTimerEnd = DateTime.now().add(duration);
+    _sleepTimer = Timer(duration, () {
+      _player.pause();
+      _sleepTimer = null;
+      _sleepTimerDuration = null;
+      _sleepTimerEnd = null;
+      notifyListeners();
+    });
+    notifyListeners();
+  }
 
-   void cancelSleepTimer() {
-     _sleepTimer?.cancel();
-     _sleepTimer = null;
-     _sleepTimerDuration = null;
-     _sleepTimerEnd = null;
-     notifyListeners();
-   }
+  void cancelSleepTimer() {
+    _sleepTimer?.cancel();
+    _sleepTimer = null;
+    _sleepTimerDuration = null;
+    _sleepTimerEnd = null;
+    notifyListeners();
+  }
 
-
- @override
-   void dispose() {
-     _positionTimer?.cancel();
-     _sleepTimer?.cancel();
-     _player.dispose();
-     super.dispose();
-   }
+  @override
+  void dispose() {
+    _positionTimer?.cancel();
+    _sleepTimer?.cancel();
+    _player.dispose();
+    super.dispose();
+  }
 }
 
 class SimpleAudioHandler extends BaseAudioHandler {
   final AudioPlayer _player;
   final PlayerProvider _provider;
 
- SimpleAudioHandler(this._provider) : _player = _provider.player {
-     _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
-     _player.durationStream.listen((duration) {
-       if (duration != null && mediaItem.value != null) {
-         mediaItem.add(mediaItem.value!.copyWith(duration: duration));
-       }
-     });
-   }
+  SimpleAudioHandler(this._provider) : _player = _provider.player {
+    _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
+    _player.durationStream.listen((duration) {
+      if (duration != null && mediaItem.value != null) {
+        mediaItem.add(mediaItem.value!.copyWith(duration: duration));
+      }
+    });
+  }
 
   PlaybackState _transformEvent(PlaybackEvent event) {
     return PlaybackState(
@@ -335,7 +393,7 @@ class SimpleAudioHandler extends BaseAudioHandler {
     await _provider.playPrevious();
   }
 
-Future<void> updateMediaItem(MediaItem item) async {
+  Future<void> updateMediaItem(MediaItem item) async {
     mediaItem.add(item);
-   }
   }
+}
