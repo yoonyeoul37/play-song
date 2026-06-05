@@ -10,6 +10,9 @@ import '../theme/app_theme.dart';
 import '../screens/player_screen.dart';
 import '../screens/edit_song_screen.dart';
 import '../screens/ringtone_screen.dart';
+import '../screens/equalizer_screen.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 
 class SongListTile extends StatelessWidget {
   final Song song;
@@ -123,6 +126,9 @@ class SongListTile extends StatelessWidget {
                 ),
                 _buildPopupItem(Icons.music_note, '벨소리로 설정', 'ringtone', primaryColor),
                 _buildPopupItem(Icons.info_outline, '곡 정보', 'info', primaryColor),
+                _buildPopupItem(Icons.equalizer, '이퀄라이저', 'equalizer', primaryColor),
+                _buildPopupItem(Icons.share, '공유', 'share', primaryColor),
+                _buildPopupItem(Icons.delete_outline, '삭제', 'delete', Colors.redAccent),
               ],
               onSelected: (value) => _handleMenuAction(context, value),
             ),
@@ -191,7 +197,7 @@ class SongListTile extends StatelessWidget {
     );
   }
 
-  void _handleMenuAction(BuildContext context, String action) {
+  Future<void> _handleMenuAction(BuildContext context, String action) async {
     final playerProvider = context.read<PlayerProvider>();
     final musicProvider = context.read<MusicProvider>();
 
@@ -233,6 +239,23 @@ class SongListTile extends StatelessWidget {
         break;
       case 'info':
         _showSongInfo(context);
+        break;
+      case 'equalizer':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const EqualizerScreen(),
+          ),
+        );
+        break;
+      case 'share':
+        if (song.uri != null) {
+          final file = XFile(song.uri!);
+          await Share.shareXFiles([file], text: song.titleDisplay);
+        }
+        break;
+      case 'delete':
+        _showDeleteDialog(context, song);
         break;
     }
   }
@@ -325,6 +348,66 @@ class SongListTile extends StatelessWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('닫기',
                 style: TextStyle(color: AppTheme.textHint)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, Song song) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceVariant,
+        title: const Text('곡 삭제',
+            style: TextStyle(color: AppTheme.textPrimary)),
+        content: Text('${song.titleDisplay}을(를) 삭제할까요?\n기기에서 영구 삭제됩니다.',
+            style: const TextStyle(color: AppTheme.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소',
+                style: TextStyle(color: AppTheme.textHint)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                if (song.uri != null) {
+                  const platform = MethodChannel('com.example.mp3_player/media');
+                  final result = await platform.invokeMethod('deleteSong', {'uri': song.uri});
+                  if (result == true) {
+                    context.read<MusicProvider>().loadSongs();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('삭제됐습니다'),
+                        backgroundColor: Colors.redAccent,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('삭제 실패'),
+                        backgroundColor: Colors.redAccent,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('삭제 실패: $e'),
+                    backgroundColor: Colors.redAccent,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            child: const Text('삭제',
+                style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),

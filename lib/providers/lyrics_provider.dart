@@ -17,6 +17,7 @@ class LyricsProvider extends ChangeNotifier {
   bool _hasLyrics = false;
   String _errorMessage = '';
   int _currentLineIndex = 0;
+  String _currentSongKey = '';
 
   List<LyricsLine> get lyrics => _lyrics;
   String get plainLyrics => _plainLyrics;
@@ -24,66 +25,69 @@ class LyricsProvider extends ChangeNotifier {
   bool get hasLyrics => _hasLyrics;
   String get errorMessage => _errorMessage;
   int get currentLineIndex => _currentLineIndex;
+  String get currentSongKey => _currentSongKey;
 
   Future<void> fetchLyrics(String title, String artist, {String? filePath}) async {
-      _isLoading = true;
-      _hasLyrics = false;
-      _lyrics = [];
-      _plainLyrics = '';
-      _errorMessage = '';
-      _currentLineIndex = 0;
-      notifyListeners();
+    final songKey = '$title-$artist';
+    if (songKey == _currentSongKey && (_hasLyrics || _isLoading)) return;
+    _currentSongKey = songKey;
+    _isLoading = true;
+    _hasLyrics = false;
+    _lyrics = [];
+    _plainLyrics = '';
+    _errorMessage = '';
+    _currentLineIndex = 0;
+    notifyListeners();
 
-      try {
-        // 1단계: LRC 파일 먼저 찾기
-        if (filePath != null) {
-          final lrcPath = filePath.replaceAll(RegExp(r'\.[^.]+$'), '.lrc');
-          final lrcFile = File(lrcPath);
-          if (await lrcFile.exists()) {
-            final content = await lrcFile.readAsString();
-            _lyrics = _parseLrc(content);
-            if (_lyrics.isNotEmpty) {
-              _hasLyrics = true;
-              _isLoading = false;
-              notifyListeners();
-              return;
-            }
+    try {
+      if (filePath != null) {
+        final lrcPath = filePath.replaceAll(RegExp(r'\.[^.]+$'), '.lrc');
+        final lrcFile = File(lrcPath);
+        if (await lrcFile.exists()) {
+          final content = await lrcFile.readAsString();
+          _lyrics = _parseLrc(content);
+          if (_lyrics.isNotEmpty) {
+            _hasLyrics = true;
+            _isLoading = false;
+            notifyListeners();
+            return;
           }
         }
-
-        // 2단계: LRCLIB API 검색
-        final url = Uri.parse(
-            'https://lrclib.net/api/get?artist_name=${Uri.encodeComponent(artist)}&track_name=${Uri.encodeComponent(title)}');
-
-        final response = await http.get(url).timeout(const Duration(seconds: 10));
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final syncedLyrics = data['syncedLyrics'] as String?;
-          final plainLyrics = data['plainLyrics'] as String?;
-
-          if (syncedLyrics != null && syncedLyrics.isNotEmpty) {
-            _lyrics = _parseLrc(syncedLyrics);
-            _hasLyrics = true;
-          } else if (plainLyrics != null && plainLyrics.isNotEmpty) {
-            _plainLyrics = plainLyrics;
-            _hasLyrics = true;
-          } else {
-            _errorMessage = '가사를 찾을 수 없습니다';
-          }
-        } else if (response.statusCode == 404) {
-          _errorMessage = '가사를 찾을 수 없습니다';
-        } else {
-          _errorMessage = '가사 로딩 실패';
-        }
-      } catch (e) {
-        _errorMessage = '인터넷 연결을 확인해주세요';
-        debugPrint('가사 로딩 오류: $e');
-      } finally {
-        _isLoading = false;
-        notifyListeners();
       }
+
+      final url = Uri.parse(
+          'https://lrclib.net/api/get?artist_name=${Uri.encodeComponent(artist)}&track_name=${Uri.encodeComponent(title)}');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final syncedLyrics = data['syncedLyrics'] as String?;
+        final plainLyrics = data['plainLyrics'] as String?;
+
+        if (syncedLyrics != null && syncedLyrics.isNotEmpty) {
+          _lyrics = _parseLrc(syncedLyrics);
+          _hasLyrics = true;
+        } else if (plainLyrics != null && plainLyrics.isNotEmpty) {
+          _plainLyrics = plainLyrics;
+          _hasLyrics = true;
+        } else {
+          _errorMessage = '가사를 찾을 수 없습니다';
+        }
+      } else if (response.statusCode == 404) {
+        _errorMessage = '가사를 찾을 수 없습니다';
+      } else {
+        _errorMessage = '가사 로딩 실패';
+      }
+    } catch (e) {
+      _errorMessage = '인터넷 연결을 확인해주세요';
+      debugPrint('가사 로딩 오류: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
+  }
+
   List<LyricsLine> _parseLrc(String lrc) {
     final lines = lrc.split('\n');
     final List<LyricsLine> result = [];
@@ -129,6 +133,7 @@ class LyricsProvider extends ChangeNotifier {
     _hasLyrics = false;
     _errorMessage = '';
     _currentLineIndex = 0;
+    _currentSongKey = '';
     notifyListeners();
   }
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/player_provider.dart';
 import '../providers/music_provider.dart';
 import '../providers/lyrics_provider.dart';
@@ -23,6 +24,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     with TickerProviderStateMixin {
   late AnimationController _rotationController;
   late AnimationController _equalizerController;
+  int _albumArtStyle = 1;
 
   @override
   void initState() {
@@ -36,28 +38,30 @@ class _PlayerScreenState extends State<PlayerScreen>
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
 
+    _loadStyle();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final playerProvider = context.read<PlayerProvider>();
-      final lyricsProvider = context.read<LyricsProvider>();
-
       final currentSong = playerProvider.currentSong;
       if (currentSong != null) {
-        lyricsProvider.fetchLyrics(
+        context.read<LyricsProvider>().fetchLyrics(
           currentSong.titleDisplay,
           currentSong.artistDisplay,
           filePath: currentSong.uri,
         );
       }
-
-playerProvider.onSongChanged = (song) {
-        lyricsProvider.clearLyrics();
-        lyricsProvider.fetchLyrics(
-          song.titleDisplay,
-          song.artistDisplay,
-          filePath: song.uri,
-        );
-      };
     });
+  }
+
+  Future<void> _loadStyle() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _albumArtStyle = prefs.getInt('albumArtStyle') ?? 1;
+    });
+  }
+
+  Future<void> _saveStyle(int style) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('albumArtStyle', style);
   }
 
   @override
@@ -74,14 +78,6 @@ playerProvider.onSongChanged = (song) {
     final song = playerProvider.currentSong;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
-    if (playerProvider.isPlaying) {
-      _rotationController.repeat();
-      _equalizerController.repeat(reverse: true);
-    } else {
-      _rotationController.stop();
-      _equalizerController.stop();
-    }
-
     if (song == null) {
       return const Scaffold(
         backgroundColor: AppTheme.background,
@@ -92,9 +88,31 @@ playerProvider.onSongChanged = (song) {
       );
     }
 
+    final lyricsProvider = context.read<LyricsProvider>();
+    final currentKey = '${song.titleDisplay}-${song.artistDisplay}';
+    if (lyricsProvider.currentSongKey != currentKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        lyricsProvider.clearLyrics();
+        lyricsProvider.fetchLyrics(
+          song.titleDisplay,
+          song.artistDisplay,
+          filePath: song.uri,
+        );
+      });
+    }
+
+    if (playerProvider.isPlaying) {
+      _rotationController.repeat();
+      _equalizerController.repeat(reverse: true);
+    } else {
+      _rotationController.stop();
+      _equalizerController.stop();
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             _buildTopBar(context, playerProvider, primaryColor),
@@ -159,6 +177,17 @@ playerProvider.onSongChanged = (song) {
                   ],
                 ),
               ),
+              PopupMenuItem(
+                value: 'style',
+                child: Row(
+                  children: [
+                    Icon(Icons.style, color: primaryColor, size: 18),
+                    const SizedBox(width: 10),
+                    const Text('재생화면 스타일',
+                        style: TextStyle(color: AppTheme.textPrimary)),
+                  ],
+                ),
+              ),
             ],
             onSelected: (value) {
               if (song == null) return;
@@ -171,6 +200,8 @@ playerProvider.onSongChanged = (song) {
                 );
               } else if (value == 'playlist') {
                 _showAddToPlaylistDialog(context, song, primaryColor);
+              } else if (value == 'style') {
+                _showStyleDialog(context, primaryColor);
               }
             },
           ),
@@ -180,6 +211,16 @@ playerProvider.onSongChanged = (song) {
   }
 
   Widget _buildAlbumArt(song, Color primaryColor) {
+    switch (_albumArtStyle) {
+      case 2: return _buildCassetteStyle(song, primaryColor);
+      case 3: return _buildCardStyle(song, primaryColor);
+      case 4: return _buildVisualizerStyle(song, primaryColor);
+      case 5: return _buildGradientStyle(song, primaryColor);
+      default: return _buildCDStyle(song, primaryColor);
+    }
+  }
+
+  Widget _buildCDStyle(song, Color primaryColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 48),
       child: Center(
@@ -219,27 +260,27 @@ playerProvider.onSongChanged = (song) {
                   child: ClipOval(
                     child: song.albumArt != null
                         ? Image.memory(
-                            Uint8List.fromList(song.albumArt!),
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                          )
+                      Uint8List.fromList(song.albumArt!),
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                    )
                         : Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppTheme.surfaceVariant,
-                                  primaryColor.withOpacity(0.3),
-                                ],
-                              ),
-                            ),
-                            child: Center(
-                              child: Icon(Icons.music_note,
-                                  color: primaryColor.withOpacity(0.7),
-                                  size: 60),
-                            ),
-                          ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppTheme.surfaceVariant,
+                            primaryColor.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(Icons.music_note,
+                            color: primaryColor.withOpacity(0.7),
+                            size: 60),
+                      ),
+                    ),
                   ),
                 ),
                 Container(
@@ -256,6 +297,360 @@ playerProvider.onSongChanged = (song) {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCassetteStyle(song, Color primaryColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1.6,
+          child: AnimatedBuilder(
+            animation: _rotationController,
+            builder: (context, child) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryColor.withOpacity(0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 20, spreadRadius: 2),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // 앨범아트 배경
+                    Positioned(
+                      top: 20,
+                      left: 20,
+                      right: 20,
+                      bottom: 25,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: song.albumArt != null
+                            ? Image.memory(
+                                Uint8List.fromList(song.albumArt!),
+                                fit: BoxFit.cover,
+                                gaplessPlayback: true,
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      AppTheme.surfaceVariant,
+                                      primaryColor.withOpacity(0.3),
+                                    ],
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Icon(Icons.music_note,
+                                      color: primaryColor, size: 30),
+                                ),
+                              ),
+                      ),
+                    ),
+                    // 상단 테이프 줄
+                    Positioned(
+                      top: 8, left: 8, right: 8,
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    // 왼쪽 릴
+                    Positioned(
+                      left: 30,
+                      child: _buildReel(primaryColor, song),
+                    ),
+                    // 오른쪽 릴
+                    Positioned(
+                      right: 30,
+                      child: _buildReel(primaryColor, song),
+                    ),
+                    // 테이프 창
+                    Container(
+                      width: 80,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: primaryColor.withOpacity(0.5)),
+                      ),
+                    ),
+                    // 하단 레이블
+                    Positioned(
+                      bottom: 6,
+                      child: Text(
+                        song.titleDisplay,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            shadows: [Shadow(color: Colors.black, blurRadius: 4)]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReel(Color primaryColor, song) {
+    return AnimatedBuilder(
+      animation: _rotationController,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotationController.value * 2 * 3.14159,
+          child: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF2A2A2A),
+              border: Border.all(color: primaryColor.withOpacity(0.5), width: 2),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                ...List.generate(6, (i) {
+                  return Transform.rotate(
+                    angle: i * 3.14159 / 3,
+                    child: Container(
+                      width: 2,
+                      height: 20,
+                      color: primaryColor.withOpacity(0.4),
+                    ),
+                  );
+                }),
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCardStyle(song, Color primaryColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Center(
+        child: AnimatedBuilder(
+          animation: _rotationController,
+          builder: (context, child) {
+            final scale = _rotationController.isAnimating ? 1.03 : 1.0;
+            return Transform.scale(
+              scale: scale,
+              child: child,
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.4),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: song.albumArt != null
+                    ? Image.memory(
+                  Uint8List.fromList(song.albumArt!),
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                )
+                    : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.surfaceVariant,
+                        primaryColor.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(Icons.music_note,
+                        color: primaryColor.withOpacity(0.7), size: 80),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVisualizerStyle(song, Color primaryColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _equalizerController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    painter: _VisualizerPainter(
+                      progress: _equalizerController.value,
+                      color: primaryColor,
+                      isPlaying: _rotationController.isAnimating,
+                    ),
+                    size: Size.infinite,
+                  );
+                },
+              ),
+              ClipOval(
+                child: SizedBox(
+                  width: 180,
+                  height: 180,
+                  child: song.albumArt != null
+                      ? Image.memory(
+                    Uint8List.fromList(song.albumArt!),
+                    fit: BoxFit.cover,
+                    gaplessPlayback: true,
+                  )
+                      : Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.surfaceVariant,
+                          primaryColor.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                    child: Icon(Icons.music_note,
+                        color: primaryColor.withOpacity(0.7), size: 60),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientStyle(song, Color primaryColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Center(
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: AnimatedBuilder(
+            animation: _rotationController,
+            builder: (context, child) {
+              return Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      primaryColor.withOpacity(0.8),
+                      primaryColor.withOpacity(0.3),
+                      AppTheme.background,
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.5),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (song.albumArt != null)
+                        Opacity(
+                          opacity: 0.3,
+                          child: Image.memory(
+                            Uint8List.fromList(song.albumArt!),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            gaplessPlayback: true,
+                          ),
+                        ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (song.albumArt != null)
+                            ClipOval(
+                              child: Image.memory(
+                                Uint8List.fromList(song.albumArt!),
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                gaplessPlayback: true,
+                              ),
+                            )
+                          else
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: primaryColor.withOpacity(0.3),
+                              ),
+                              child: const Icon(Icons.music_note,
+                                  color: Colors.white, size: 60),
+                            ),
+                          const SizedBox(height: 12),
+                          Text(
+                            song.titleDisplay,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -291,23 +686,26 @@ playerProvider.onSongChanged = (song) {
   }
 
   Widget _buildCurrentLyrics(PlayerProvider playerProvider, Color primaryColor) {
-    final lyricsProvider = context.read<LyricsProvider>();
+    final lyricsProvider = context.watch<LyricsProvider>();
     if (!lyricsProvider.hasLyrics || lyricsProvider.lyrics.isEmpty) {
-      return const SizedBox.shrink();
+      return const SizedBox(height: 36);
     }
     lyricsProvider.updateCurrentLine(playerProvider.position);
     final currentLine = lyricsProvider.lyrics[lyricsProvider.currentLineIndex];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-      child: Text(
-        currentLine.text,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: primaryColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+    return SizedBox(
+      height: 36,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Text(
+          currentLine.text,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: primaryColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -318,7 +716,7 @@ playerProvider.onSongChanged = (song) {
     final isFav = musicProvider.isFavorite(song.id);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
       child: Column(
         children: [
           Row(
@@ -330,14 +728,14 @@ playerProvider.onSongChanged = (song) {
                     Text(song.titleDisplay,
                         style: const TextStyle(
                             color: AppTheme.textPrimary,
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text(song.artistDisplay,
                         style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 14),
+                            color: AppTheme.textSecondary, fontSize: 12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ],
@@ -358,7 +756,7 @@ playerProvider.onSongChanged = (song) {
             onChanged: (value) {
               final position = Duration(
                 milliseconds:
-                    (value * playerProvider.duration.inMilliseconds).toInt(),
+                (value * playerProvider.duration.inMilliseconds).toInt(),
               );
               playerProvider.seekTo(position);
             },
@@ -410,17 +808,17 @@ playerProvider.onSongChanged = (song) {
                   ),
                   child: playerProvider.isLoading
                       ? const Padding(
-                          padding: EdgeInsets.all(18),
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.black),
-                        )
+                    padding: EdgeInsets.all(18),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2.5, color: Colors.black),
+                  )
                       : Icon(
-                          playerProvider.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                          color: Colors.black,
-                          size: 36,
-                        ),
+                    playerProvider.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                    color: Colors.black,
+                    size: 36,
+                  ),
                 ),
               ),
               IconButton(
@@ -444,16 +842,16 @@ playerProvider.onSongChanged = (song) {
                 iconSize: 22,
               ),
               IconButton(
-                              onPressed: () => _showLoopModeDialog(context, playerProvider, primaryColor),
-                              icon: Icon(
-                                  playerProvider.loopMode == LoopMode.one
-                                      ? Icons.repeat_one
-                                      : Icons.repeat,
-                                  color: playerProvider.loopMode != LoopMode.off
-                                      ? primaryColor
-                                      : AppTheme.textHint),
-                              iconSize: 22,
-                            ),
+                onPressed: () => _showLoopModeDialog(context, playerProvider, primaryColor),
+                icon: Icon(
+                    playerProvider.loopMode == LoopMode.one
+                        ? Icons.repeat_one
+                        : Icons.repeat,
+                    color: playerProvider.loopMode != LoopMode.off
+                        ? primaryColor
+                        : AppTheme.textHint),
+                iconSize: 22,
+              ),
               IconButton(
                 onPressed: () => _showSleepTimerDialog(context, playerProvider, primaryColor),
                 icon: Icon(Icons.bedtime,
@@ -479,7 +877,7 @@ playerProvider.onSongChanged = (song) {
                     ),
                   );
                 },
-                icon: Icon(Icons.lyrics_outlined, color: AppTheme.textHint),
+                icon: const Icon(Icons.lyrics_outlined, color: AppTheme.textHint),
                 iconSize: 22,
               ),
             ],
@@ -499,35 +897,35 @@ playerProvider.onSongChanged = (song) {
             style: TextStyle(color: AppTheme.textPrimary)),
         content: playlistProvider.playlists.isEmpty
             ? const Text('재생목록이 없습니다.\n재생목록 탭에서 먼저 만들어주세요.',
-                style: TextStyle(color: AppTheme.textSecondary))
+            style: TextStyle(color: AppTheme.textSecondary))
             : SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: playlistProvider.playlists.length,
-                  itemBuilder: (context, index) {
-                    final playlist = playlistProvider.playlists[index];
-                    return ListTile(
-                      leading: Icon(Icons.playlist_play, color: primaryColor),
-                      title: Text(playlist.name,
-                          style: const TextStyle(color: AppTheme.textPrimary)),
-                      subtitle: Text('${playlist.songCount}곡',
-                          style: const TextStyle(color: AppTheme.textSecondary)),
-                      onTap: () {
-                        playlistProvider.addSongToPlaylist(playlist.id, song);
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${playlist.name}에 추가됐습니다'),
-                            backgroundColor: AppTheme.surfaceVariant,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: playlistProvider.playlists.length,
+            itemBuilder: (context, index) {
+              final playlist = playlistProvider.playlists[index];
+              return ListTile(
+                leading: Icon(Icons.playlist_play, color: primaryColor),
+                title: Text(playlist.name,
+                    style: const TextStyle(color: AppTheme.textPrimary)),
+                subtitle: Text('${playlist.songCount}곡',
+                    style: const TextStyle(color: AppTheme.textSecondary)),
+                onTap: () {
+                  playlistProvider.addSongToPlaylist(playlist.id, song);
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${playlist.name}에 추가됐습니다'),
+                      backgroundColor: AppTheme.surfaceVariant,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -551,136 +949,212 @@ playerProvider.onSongChanged = (song) {
       builder: (ctx) => _SpeedDialog(playerProvider: playerProvider, primaryColor: primaryColor),
     );
   }
-}
 
-void _showLoopModeDialog(BuildContext context, PlayerProvider playerProvider, Color primaryColor) {
-    showModalBottomSheet(
+  void _showStyleDialog(BuildContext context, Color primaryColor) {
+    final styles = [
+      {'id': 1, 'name': 'CD 회전', 'icon': Icons.album, 'desc': '클래식한 CD 회전 애니메이션'},
+      {'id': 2, 'name': '카세트 테이프', 'icon': Icons.settings_input_composite, 'desc': '레트로 카세트 테이프'},
+      {'id': 3, 'name': '앨범아트 카드', 'icon': Icons.image, 'desc': '심플한 앨범아트 카드형'},
+      {'id': 4, 'name': '파형 비주얼라이저', 'icon': Icons.graphic_eq, 'desc': '음파 애니메이션'},
+      {'id': 5, 'name': '그라데이션', 'icon': Icons.gradient, 'desc': '앨범아트 색상 그라데이션 배경'},
+    ];
+
+    showDialog(
       context: context,
-      backgroundColor: AppTheme.surfaceVariant,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.surfaceVariant,
+          title: Row(
             children: [
-              Row(
-                children: [
-                  Icon(Icons.repeat, color: primaryColor, size: 20),
-                  const SizedBox(width: 8),
-                  const Text('반복 모드',
-                      style: TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildLoopOption(
-                ctx,
-                icon: Icons.arrow_forward,
-                title: '반복 없음',
-                subtitle: '목록 끝나면 정지',
-                isSelected: playerProvider.loopMode == LoopMode.off,
-                primaryColor: primaryColor,
-                onTap: () {
-                  playerProvider.setLoopMode(LoopMode.off);
-                  setDialogState(() {});
-                  Navigator.pop(ctx);
-                },
-              ),
-              _buildLoopOption(
-                ctx,
-                icon: Icons.repeat_one,
-                title: '현재 노래 반복',
-                subtitle: '현재 노래를 계속 반복',
-                isSelected: playerProvider.loopMode == LoopMode.one,
-                primaryColor: primaryColor,
-                onTap: () {
-                  playerProvider.setLoopMode(LoopMode.one);
-                  setDialogState(() {});
-                  Navigator.pop(ctx);
-                },
-              ),
-              _buildLoopOption(
-                ctx,
-                icon: Icons.repeat,
-                title: '전체 반복',
-                subtitle: '목록 전체를 계속 반복',
-                isSelected: playerProvider.loopMode == LoopMode.all,
-                primaryColor: primaryColor,
-                onTap: () {
-                  playerProvider.setLoopMode(LoopMode.all);
-                  setDialogState(() {});
-                  Navigator.pop(ctx);
-                },
-              ),
-              const SizedBox(height: 8),
+              Icon(Icons.style, color: primaryColor, size: 20),
+              const SizedBox(width: 8),
+              const Text('재생화면 스타일',
+                  style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoopOption(
-    BuildContext ctx, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required Color primaryColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? primaryColor.withOpacity(0.15)
-                    : AppTheme.background,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon,
-                  color: isSelected ? primaryColor : AppTheme.textHint,
-                  size: 20),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: styles.length,
+              itemBuilder: (context, index) {
+                final style = styles[index];
+                final isSelected = _albumArtStyle == style['id'];
+                return InkWell(
+                  onTap: () {
+                    setState(() => _albumArtStyle = style['id'] as int);
+                    _saveStyle(style['id'] as int);
+                    setDialogState(() {});
+                    Navigator.pop(ctx);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? primaryColor.withOpacity(0.15) : AppTheme.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? primaryColor : Colors.transparent,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(style['icon'] as IconData,
+                            color: isSelected ? primaryColor : AppTheme.textHint, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(style['name'] as String,
+                                  style: TextStyle(
+                                      color: isSelected ? primaryColor : AppTheme.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                              Text(style['desc'] as String,
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(Icons.check_circle, color: primaryColor, size: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: TextStyle(
-                          color: isSelected
-                              ? primaryColor
-                              : AppTheme.textPrimary,
-                          fontSize: 14,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal)),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 11)),
-                ],
-              ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('닫기', style: TextStyle(color: primaryColor)),
             ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: primaryColor, size: 20),
           ],
         ),
       ),
     );
   }
+}
+
+void _showLoopModeDialog(BuildContext context, PlayerProvider playerProvider, Color primaryColor) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: AppTheme.surfaceVariant,
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    builder: (ctx) => StatefulBuilder(
+      builder: (context, setDialogState) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.repeat, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                const Text('반복 모드',
+                    style: TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildLoopOption(ctx,
+              icon: Icons.arrow_forward,
+              title: '반복 없음',
+              subtitle: '목록 끝나면 정지',
+              isSelected: playerProvider.loopMode == LoopMode.off,
+              primaryColor: primaryColor,
+              onTap: () {
+                playerProvider.setLoopMode(LoopMode.off);
+                setDialogState(() {});
+                Navigator.pop(ctx);
+              },
+            ),
+            _buildLoopOption(ctx,
+              icon: Icons.repeat_one,
+              title: '현재 노래 반복',
+              subtitle: '현재 노래를 계속 반복',
+              isSelected: playerProvider.loopMode == LoopMode.one,
+              primaryColor: primaryColor,
+              onTap: () {
+                playerProvider.setLoopMode(LoopMode.one);
+                setDialogState(() {});
+                Navigator.pop(ctx);
+              },
+            ),
+            _buildLoopOption(ctx,
+              icon: Icons.repeat,
+              title: '전체 반복',
+              subtitle: '목록 전체를 계속 반복',
+              isSelected: playerProvider.loopMode == LoopMode.all,
+              primaryColor: primaryColor,
+              onTap: () {
+                playerProvider.setLoopMode(LoopMode.all);
+                setDialogState(() {});
+                Navigator.pop(ctx);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildLoopOption(
+    BuildContext ctx, {
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required bool isSelected,
+      required Color primaryColor,
+      required VoidCallback onTap,
+    }) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isSelected ? primaryColor.withOpacity(0.15) : AppTheme.background,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon,
+                color: isSelected ? primaryColor : AppTheme.textHint, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: TextStyle(
+                        color: isSelected ? primaryColor : AppTheme.textPrimary,
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                Text(subtitle,
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+              ],
+            ),
+          ),
+          if (isSelected)
+            Icon(Icons.check_circle, color: primaryColor, size: 20),
+        ],
+      ),
+    ),
+  );
+}
 
 class _SleepTimerDialog extends StatefulWidget {
   final PlayerProvider playerProvider;
@@ -755,7 +1229,6 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 타이틀
             Row(
               children: [
                 Icon(Icons.bedtime, color: primaryColor, size: 20),
@@ -768,7 +1241,6 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
               ],
             ),
             const SizedBox(height: 20),
-
             if (isActive) ...[
               Container(
                 padding: const EdgeInsets.all(16),
@@ -822,7 +1294,6 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
                 ],
               ),
             ] else ...[
-              // 시간 표시
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
@@ -840,15 +1311,12 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // 분 슬라이더
               Row(
                 children: [
                   SizedBox(
                     width: 24,
                     child: Text('분',
-                        style: TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12)),
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                   ),
                   Expanded(
                     child: Slider(
@@ -861,20 +1329,16 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
                   SizedBox(
                     width: 24,
                     child: Text('$selectedMinutes',
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12)),
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                   ),
                 ],
               ),
-
-              // 시간 슬라이더
               Row(
                 children: [
                   SizedBox(
                     width: 24,
                     child: Text('시',
-                        style: TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12)),
+                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                   ),
                   Expanded(
                     child: Slider(
@@ -887,13 +1351,11 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
                   SizedBox(
                     width: 24,
                     child: Text('$selectedHours',
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12)),
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   Expanded(
@@ -915,9 +1377,7 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
                         final total = selectedHours * 60 + selectedMinutes;
                         if (total > 0) {
                           widget.playerProvider.setSleepTimer(
-                            Duration(
-                                hours: selectedHours,
-                                minutes: selectedMinutes),
+                            Duration(hours: selectedHours, minutes: selectedMinutes),
                           );
                           Navigator.pop(context);
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -951,8 +1411,7 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
 class _SpeedDialog extends StatefulWidget {
   final PlayerProvider playerProvider;
   final Color primaryColor;
-  const _SpeedDialog(
-      {required this.playerProvider, required this.primaryColor});
+  const _SpeedDialog({required this.playerProvider, required this.primaryColor});
 
   @override
   State<_SpeedDialog> createState() => _SpeedDialogState();
@@ -978,7 +1437,6 @@ class _SpeedDialogState extends State<_SpeedDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 타이틀
             Row(
               children: [
                 Icon(Icons.speed, color: primaryColor, size: 20),
@@ -991,8 +1449,6 @@ class _SpeedDialogState extends State<_SpeedDialog> {
               ],
             ),
             const SizedBox(height: 16),
-
-            // 속도 표시
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
@@ -1010,8 +1466,6 @@ class _SpeedDialogState extends State<_SpeedDialog> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // 슬라이더
             Slider(
               value: _speed,
               min: 0.5,
@@ -1023,13 +1477,11 @@ class _SpeedDialogState extends State<_SpeedDialog> {
               },
             ),
             const SizedBox(height: 8),
-
-            // 프리셋 버튼
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          alignment: WrapAlignment.center,
-                          children: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0].map((speed) {
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              alignment: WrapAlignment.center,
+              children: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0].map((speed) {
                 final isSelected = (_speed - speed).abs() < 0.01;
                 return GestureDetector(
                   onTap: () {
@@ -1037,33 +1489,25 @@ class _SpeedDialogState extends State<_SpeedDialog> {
                     widget.playerProvider.setPlaybackSpeed(speed);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: isSelected ? primaryColor : AppTheme.background,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: isSelected
-                              ? primaryColor
-                              : AppTheme.divider),
+                          color: isSelected ? primaryColor : AppTheme.divider),
                     ),
                     child: Text(
                       '${speed}x',
                       style: TextStyle(
-                          color: isSelected
-                              ? Colors.black
-                              : AppTheme.textSecondary,
+                          color: isSelected ? Colors.black : AppTheme.textSecondary,
                           fontSize: 12,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal),
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
                     ),
                   ),
                 );
               }).toList(),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
@@ -1102,4 +1546,54 @@ class _SpeedDialogState extends State<_SpeedDialog> {
       ),
     );
   }
+}
+
+class _VisualizerPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final bool isPlaying;
+
+  _VisualizerPainter({
+    required this.progress,
+    required this.color,
+    required this.isPlaying,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withOpacity(0.6)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 10;
+    const barCount = 40;
+
+    for (int i = 0; i < barCount; i++) {
+      final angle = (i / barCount) * 2 * 3.14159;
+      final barHeight = isPlaying
+          ? 10 + 20 * (0.5 + 0.5 * (i % 3 == 0 ? progress : (i % 3 == 1 ? (1 - progress) : 0.5)))
+          : 5.0;
+
+      final innerRadius = radius - barHeight;
+      final outerRadius = radius;
+
+      final start = Offset(
+        center.dx + innerRadius * cos(angle),
+        center.dy + innerRadius * sin(angle),
+      );
+      final end = Offset(
+        center.dx + outerRadius * cos(angle),
+        center.dy + outerRadius * sin(angle),
+      );
+
+      canvas.drawLine(start, end, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_VisualizerPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.isPlaying != isPlaying;
 }

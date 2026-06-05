@@ -72,6 +72,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _showTextSizeDialog(context),
                 primaryColor: primaryColor,
               ),
+              _buildTileDivider(),
+              _buildTile(
+                context,
+                icon: Icons.style,
+                title: '재생화면 스타일',
+                subtitle: '재생 화면 디자인 선택',
+                onTap: () => _showPlayerStyleDialog(context),
+                primaryColor: primaryColor,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -334,6 +343,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await TorchLight.disableTorch();
         setState(() => _isFlashlightOn = false);
       } else {
+        // SOS 켜져 있으면 자동으로 끄기
+        if (_isSosOn) {
+          setState(() => _isSosOn = false);
+          await TorchLight.disableTorch();
+          await Future.delayed(const Duration(milliseconds: 200));
+        }
         await TorchLight.enableTorch();
         setState(() => _isFlashlightOn = true);
       }
@@ -353,6 +368,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _isSosOn = false);
       await TorchLight.disableTorch();
     } else {
+      // 손전등 켜져 있으면 자동으로 끄기
+      if (_isFlashlightOn) {
+        await TorchLight.disableTorch();
+        setState(() => _isFlashlightOn = false);
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
       setState(() => _isSosOn = true);
       _startSOS();
     }
@@ -524,7 +545,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-Future<void> _launchUrl(String url) async {
+void _showPlayerStyleDialog(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    int currentStyle = prefs.getInt('albumArtStyle') ?? 1;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    final styles = [
+      {'id': 1, 'name': 'CD 회전', 'icon': Icons.album, 'desc': '클래식한 CD 회전 애니메이션'},
+      {'id': 2, 'name': '카세트 테이프', 'icon': Icons.settings_input_composite, 'desc': '레트로 카세트 테이프'},
+      {'id': 3, 'name': '앨범아트 카드', 'icon': Icons.image, 'desc': '심플한 앨범아트 카드형'},
+      {'id': 4, 'name': '파형 비주얼라이저', 'icon': Icons.graphic_eq, 'desc': '음파 애니메이션'},
+      {'id': 5, 'name': '그라데이션', 'icon': Icons.gradient, 'desc': '앨범아트 색상 그라데이션 배경'},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.surfaceVariant,
+          title: Row(
+            children: [
+              Icon(Icons.style, color: primaryColor, size: 20),
+              const SizedBox(width: 8),
+              const Text('재생화면 스타일',
+                  style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: styles.length,
+              itemBuilder: (context, index) {
+                final style = styles[index];
+                final isSelected = currentStyle == style['id'];
+                return InkWell(
+                  onTap: () async {
+                    currentStyle = style['id'] as int;
+                    await prefs.setInt('albumArtStyle', currentStyle);
+                    setDialogState(() {});
+                    Navigator.pop(ctx);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? primaryColor.withOpacity(0.15) : AppTheme.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected ? primaryColor : Colors.transparent,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(style['icon'] as IconData,
+                            color: isSelected ? primaryColor : AppTheme.textHint, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(style['name'] as String,
+                                  style: TextStyle(
+                                      color: isSelected ? primaryColor : AppTheme.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                              Text(style['desc'] as String,
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(Icons.check_circle, color: primaryColor, size: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('닫기', style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
   final uri = Uri.parse(url);
   try {
     await launchUrl(uri, mode: LaunchMode.externalApplication);

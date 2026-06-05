@@ -15,11 +15,13 @@ import java.io.File
 class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.example.mp3_player/media"
     private var equalizer: Equalizer? = null
+    private var bassBoost: android.media.audiofx.BassBoost? = null
+    private var virtualizer: android.media.audiofx.Virtualizer? = null
     private var deleteResult: MethodChannel.Result? = null
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 101) {
+        if (requestCode == 101 || requestCode == 102) {
             if (resultCode == android.app.Activity.RESULT_OK) {
                 deleteResult?.success(true)
             } else {
@@ -77,6 +79,53 @@ class MainActivity : AudioServiceActivity() {
                     val level = equalizer?.getBandLevel(band)?.toInt() ?: 0
                     result.success(level)
                 }
+                "initBassBoost" -> {
+                    val audioSessionId = (call.argument<Any>("audioSessionId") as? Number)?.toInt() ?: 0
+                    try {
+                        bassBoost?.release()
+                        bassBoost = android.media.audiofx.BassBoost(0, audioSessionId)
+                        bassBoost?.enabled = true
+                        result.success(bassBoost?.roundedStrength?.toInt() ?: 0)
+                    } catch (e: Exception) {
+                        result.success(0)
+                    }
+                }
+                "setBassBoost" -> {
+                    val strength = (call.argument<Any>("strength") as? Number)?.toShort() ?: 0
+                    try {
+                        bassBoost?.setStrength(strength)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
+                "initVirtualizer" -> {
+                    val audioSessionId = (call.argument<Any>("audioSessionId") as? Number)?.toInt() ?: 0
+                    try {
+                        virtualizer?.release()
+                        virtualizer = android.media.audiofx.Virtualizer(0, audioSessionId)
+                        virtualizer?.enabled = true
+                        result.success(virtualizer?.roundedStrength?.toInt() ?: 0)
+                    } catch (e: Exception) {
+                        result.success(0)
+                    }
+                }
+                "setVirtualizer" -> {
+                    val strength = (call.argument<Any>("strength") as? Number)?.toShort() ?: 0
+                    try {
+                        virtualizer?.setStrength(strength)
+                        result.success(true)
+                    } catch (e: Exception) {
+                        result.success(false)
+                    }
+                }
+                "releaseAudioEffects" -> {
+                    bassBoost?.release()
+                    bassBoost = null
+                    virtualizer?.release()
+                    virtualizer = null
+                    result.success(true)
+                }
                 "getVideoList" -> {
                     result.success(getVideoList())
                 }
@@ -84,6 +133,44 @@ class MainActivity : AudioServiceActivity() {
                     val path = call.argument<String>("path")
                     if (path != null) result.success(getVideoThumbnail(path))
                     else result.success(null)
+                }
+                "deleteSong" -> {
+                    val uri = call.argument<String>("uri")
+                    if (uri != null) {
+                        try {
+                            val cursor = contentResolver.query(
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                arrayOf(MediaStore.Audio.Media._ID),
+                                "${MediaStore.Audio.Media.DATA}=?",
+                                arrayOf(uri), null
+                            )
+                            cursor?.use {
+                                if (it.moveToFirst()) {
+                                    val id = it.getLong(it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID))
+                                    val audioUri = android.net.Uri.withAppendedPath(
+                                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id.toString()
+                                    )
+                                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                                        deleteResult = result
+                                        val pendingIntent = MediaStore.createDeleteRequest(
+                                            contentResolver, listOf(audioUri)
+                                        )
+                                        startIntentSenderForResult(
+                                            pendingIntent.intentSender, 102, null, 0, 0, 0
+                                        )
+                                    } else {
+                                        contentResolver.delete(audioUri, null, null)
+                                        result.success(true)
+                                    }
+                                } else {
+                                    result.success(false)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("DeleteSong", "Error: ${e.message}", e)
+                            result.success(false)
+                        }
+                    } else result.success(false)
                 }
                 "deleteVideo" -> {
                     val uri = call.argument<String>("uri")
