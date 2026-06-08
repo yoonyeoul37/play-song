@@ -320,6 +320,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get flashlightError => 'Flashlight error';
 
   @override
+  String get minuteShort => 'min';
+
+  @override
+  String get hourShort => 'hr';
+
+  @override
   String get privacyPolicyUrl => 'https://www.ssing.kr/privacy_policy_en.html';
 
   @override
@@ -343,4 +349,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reset => 'Reset';
+
+  @override
+  String get reviewTitle => 'Do you enjoy CatSong?';
+
+  @override
+  String get reviewMessage =>
+      'Please leave a rating!\nIt helps us improve the app 😊';
+
+  @override
+  String get reviewButton => '⭐ Leave a Rating';
+
+  @override
+  String get reviewLater => 'Maybe Later';
+
+  @override
+  String get fontDefault => 'Default Font';
+
+  @override
+  String get fontNotoSans => 'Noto Sans KR (Clean)';
+
+  @override
+  String get fontJua => 'Jua (Cute)';
+
+  @override
+  String get fontGaegu => 'Gaegu (Handwriting)';
+
+  @override
+  String get fontNanumGothic => 'Nanum Gothic (Soft)';
+
+  @override
+  String get fontDoHyeon => 'Do Hyeon (Modern)';
+
+  @override
+  String get fontCuteFont => 'Cute Font (Cute)';
+
+  @override
+  String get fontStylish => 'Stylish (Elegant)';
+
+  @override
+  String get fontSunflower => 'Sunflower (Light)';
+
+  @override
+  String get fontHiMelody => 'Hi Melody (Emotional)';
+
+  @override
+  String get fontPoorStory => 'Poor Story (Handwriting)';
+
+  @override
+  String get fontEastSeaDokdo => 'East Sea Dokdo (Unique)';
+
+  @override
+  String get fontNanumBrush => 'Nanum Brush Script (Brush)';
+
+  @override
+  String get fontNanumMyeongjo => 'Nanum Myeongjo (Serif)';
+
+  @override
+  String get fontBlackAndWhite => 'Black And White Picture (Special)';
+
+  @override
+  String get fontGowunDodum => 'Gowun Dodum (Round)';
+
+  @override
+  String get fontGowunBatang => 'Gowun Batang (Batang)';
+
+  @override
+  String get fontNanumPen => 'Nanum Pen Script (Pen)';
+
+  @override
+  String get fontSingleDay => 'Single Day (Cute)';
+
+  @override
+  String get fontYeonSung => 'Yeon Sung (Soft)';
+
+  @override
+  String get styleCD => 'CD Rotation';
+
+  @override
+  String get styleCDDesc => 'Classic CD rotation animation';
+
+  @override
+  String get styleCassette => 'Cassette Tape';
+
+  @override
+  String get styleCassetteDesc => 'Retro cassette tape style';
+
+  @override
+  String get styleCard => 'Album Art Card';
+
+  @override
+  String get styleCardDesc => 'Simple album art card style';
+
+  @override
+  String get styleVisualizer => 'Waveform Visualizer';
+
+  @override
+  String get styleVisualizerDesc => 'Sound wave animation';
+
+  @override
+  String get styleGradient => 'Gradient';
+
+  @override
+  String get styleGradientDesc => 'Album art color gradient background';
 }

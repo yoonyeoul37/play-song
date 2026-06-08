@@ -318,6 +318,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get flashlightError => '懐中電灯エラー';
 
   @override
+  String get minuteShort => '分';
+
+  @override
+  String get hourShort => '時';
+
+  @override
   String get privacyPolicyUrl => 'https://www.ssing.kr/privacy_policy_ja.html';
 
   @override
@@ -341,4 +347,106 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get reset => 'リセット';
+
+  @override
+  String get reviewTitle => 'cat songはいかがですか？';
+
+  @override
+  String get reviewMessage => '評価を残していただけると\nアプリ改善に大変役立ちます 😊';
+
+  @override
+  String get reviewButton => '⭐ 評価を残す';
+
+  @override
+  String get reviewLater => '後で';
+
+  @override
+  String get fontDefault => 'デフォルトフォント';
+
+  @override
+  String get fontNotoSans => 'Noto Sans KR (すっきり)';
+
+  @override
+  String get fontJua => 'Jua (かわいい)';
+
+  @override
+  String get fontGaegu => 'Gaegu (手書き)';
+
+  @override
+  String get fontNanumGothic => 'Nanum Gothic (やわらか)';
+
+  @override
+  String get fontDoHyeon => 'Do Hyeon (モダン)';
+
+  @override
+  String get fontCuteFont => 'Cute Font (かわいい)';
+
+  @override
+  String get fontStylish => 'Stylish (上品)';
+
+  @override
+  String get fontSunflower => 'Sunflower (軽い)';
+
+  @override
+  String get fontHiMelody => 'Hi Melody (感性的)';
+
+  @override
+  String get fontPoorStory => 'Poor Story (手書き)';
+
+  @override
+  String get fontEastSeaDokdo => 'East Sea Dokdo (個性的)';
+
+  @override
+  String get fontNanumBrush => 'Nanum Brush Script (筆書き)';
+
+  @override
+  String get fontNanumMyeongjo => 'Nanum Myeongjo (明朝体)';
+
+  @override
+  String get fontBlackAndWhite => 'Black And White Picture (ユニーク)';
+
+  @override
+  String get fontGowunDodum => 'Gowun Dodum (丸み)';
+
+  @override
+  String get fontGowunBatang => 'Gowun Batang (バタン体)';
+
+  @override
+  String get fontNanumPen => 'Nanum Pen Script (ペン書き)';
+
+  @override
+  String get fontSingleDay => 'Single Day (かわいい)';
+
+  @override
+  String get fontYeonSung => 'Yeon Sung (やわらか)';
+
+  @override
+  String get styleCD => 'CD回転';
+
+  @override
+  String get styleCDDesc => 'クラシックなCD回転アニメーション';
+
+  @override
+  String get styleCassette => 'カセットテープ';
+
+  @override
+  String get styleCassetteDesc => 'レトロなカセットテープスタイル';
+
+  @override
+  String get styleCard => 'アルバムアートカード';
+
+  @override
+  String get styleCardDesc => 'シンプルなアルバムアートカード';
+
+  @override
+  String get styleVisualizer => '波形ビジュアライザー';
+
+  @override
+  String get styleVisualizerDesc => '音波アニメーション';
+
+  @override
+  String get styleGradient => 'グラデーション';
+
+  @override
+  String get styleGradientDesc => 'アルバムアートカラーグラデーション背景';
 }

@@ -1113,11 +1113,11 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _showStyleDialog(BuildContext context, Color primaryColor) {
     final styles = [
-      {'id': 1, 'name': 'CD Rotation', 'icon': Icons.album, 'desc': 'Classic CD rotation animation'},
-      {'id': 2, 'name': 'Cassette Tape', 'icon': Icons.settings_input_composite, 'desc': 'Retro cassette tape style'},
-      {'id': 3, 'name': 'Album Art Card', 'icon': Icons.image, 'desc': 'Simple album art card style'},
-      {'id': 4, 'name': 'Waveform Visualizer', 'icon': Icons.graphic_eq, 'desc': 'Sound wave animation'},
-      {'id': 5, 'name': 'Gradient', 'icon': Icons.gradient, 'desc': 'Album art color gradient background'},
+      {'id': 1, 'name': AppLocalizations.of(context)!.styleCD, 'icon': Icons.album, 'desc': AppLocalizations.of(context)!.styleCDDesc},
+      {'id': 2, 'name': AppLocalizations.of(context)!.styleCassette, 'icon': Icons.settings_input_composite, 'desc': AppLocalizations.of(context)!.styleCassetteDesc},
+      {'id': 3, 'name': AppLocalizations.of(context)!.styleCard, 'icon': Icons.image, 'desc': AppLocalizations.of(context)!.styleCardDesc},
+      {'id': 4, 'name': AppLocalizations.of(context)!.styleVisualizer, 'icon': Icons.graphic_eq, 'desc': AppLocalizations.of(context)!.styleVisualizerDesc},
+      {'id': 5, 'name': AppLocalizations.of(context)!.styleGradient, 'icon': Icons.gradient, 'desc': AppLocalizations.of(context)!.styleGradientDesc},
     ];
 
     showDialog(
@@ -1518,7 +1518,7 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
               children: [
                 SizedBox(
                   width: 30,
-                  child: Text('min',
+                  child: Text(AppLocalizations.of(context)!.minuteShort,
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 ),
                 Expanded(
@@ -1540,7 +1540,7 @@ class _SleepTimerDialogState extends State<_SleepTimerDialog> {
               children: [
                 SizedBox(
                   width: 30,
-                  child: Text('hr',
+                  child: Text(AppLocalizations.of(context)!.hourShort,
                       style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 ),
                 Expanded(

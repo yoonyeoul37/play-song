@@ -29,6 +29,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  String _getFontName(BuildContext context, String key) {
+    final l = AppLocalizations.of(context)!;
+    switch (key) {
+      case 'default': return l.fontDefault;
+      case 'noto_sans': return l.fontNotoSans;
+      case 'jua': return l.fontJua;
+      case 'gaegu': return l.fontGaegu;
+      case 'nanum_gothic': return l.fontNanumGothic;
+      case 'do_hyeon': return l.fontDoHyeon;
+      case 'cute_font': return l.fontCuteFont;
+      case 'stylish': return l.fontStylish;
+      case 'sunflower': return l.fontSunflower;
+      case 'hi_melody': return l.fontHiMelody;
+      case 'poor_story': return l.fontPoorStory;
+      case 'east_sea_dokdo': return l.fontEastSeaDokdo;
+      case 'nanum_brush': return l.fontNanumBrush;
+      case 'nanum_myeongjo': return l.fontNanumMyeongjo;
+      case 'black_and_white': return l.fontBlackAndWhite;
+      case 'gowun_dodum': return l.fontGowunDodum;
+      case 'gowun_batang': return l.fontGowunBatang;
+      case 'nanum_pen': return l.fontNanumPen;
+      case 'single_day': return l.fontSingleDay;
+      case 'yeon_sung': return l.fontYeonSung;
+      default: return key;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -564,13 +591,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     int currentStyle = prefs.getInt('albumArtStyle') ?? 1;
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final l = AppLocalizations.of(context)!;
 
     final styles = [
-      {'id': 1, 'name': 'CD Rotation', 'icon': Icons.album, 'desc': 'Classic CD rotation animation'},
-      {'id': 2, 'name': 'Cassette Tape', 'icon': Icons.settings_input_composite, 'desc': 'Retro cassette tape style'},
-      {'id': 3, 'name': 'Album Art Card', 'icon': Icons.image, 'desc': 'Simple album art card style'},
-      {'id': 4, 'name': 'Waveform Visualizer', 'icon': Icons.graphic_eq, 'desc': 'Sound wave animation'},
-      {'id': 5, 'name': 'Gradient', 'icon': Icons.gradient, 'desc': 'Album art color gradient background'},
+      {'id': 1, 'name': l.styleCD, 'icon': Icons.album, 'desc': l.styleCDDesc},
+      {'id': 2, 'name': l.styleCassette, 'icon': Icons.settings_input_composite, 'desc': l.styleCassetteDesc},
+      {'id': 3, 'name': l.styleCard, 'icon': Icons.image, 'desc': l.styleCardDesc},
+      {'id': 4, 'name': l.styleVisualizer, 'icon': Icons.graphic_eq, 'desc': l.styleVisualizerDesc},
+      {'id': 5, 'name': l.styleGradient, 'icon': Icons.gradient, 'desc': l.styleGradientDesc},
     ];
 
     showDialog(
@@ -725,7 +753,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             size: 22),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(font['name']!,
+                          child: Text(_getFontName(context, font['key']!),
                               style: TextStyle(
                                   color: isSelected
                                       ? primaryColor

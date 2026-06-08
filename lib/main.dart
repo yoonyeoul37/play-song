@@ -149,6 +149,7 @@ class _AppInitializerState extends State<AppInitializer> {
   Future<void> _showReviewDialog() async {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final prefs = await SharedPreferences.getInstance();
+    final l = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
@@ -178,9 +179,9 @@ class _AppInitializerState extends State<AppInitializer> {
                 child: const Icon(Icons.music_note, color: Colors.black, size: 36),
               ),
               const SizedBox(height: 20),
-              const Text(
-                '캣송이 마음에 드시나요?',
-                style: TextStyle(
+              Text(
+                l.reviewTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -188,9 +189,9 @@ class _AppInitializerState extends State<AppInitializer> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
-              const Text(
-                '별점을 남겨주시면\n앱 개선에 큰 도움이 됩니다 😊',
-                style: TextStyle(
+              Text(
+                l.reviewMessage,
+                style: const TextStyle(
                   color: Colors.white60,
                   fontSize: 13,
                   height: 1.5,
@@ -219,8 +220,8 @@ class _AppInitializerState extends State<AppInitializer> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text('⭐ 평점 남기기',
-                      style: TextStyle(
+                  child: Text(l.reviewButton,
+                      style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
               ),
@@ -237,8 +238,8 @@ class _AppInitializerState extends State<AppInitializer> {
                     foregroundColor: Colors.white38,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text('나중에 할게요',
-                      style: TextStyle(fontSize: 13)),
+                  child: Text(l.reviewLater,
+                      style: const TextStyle(fontSize: 13)),
                 ),
               ),
             ],

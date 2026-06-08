@@ -720,6 +720,18 @@ abstract class AppLocalizations {
   /// **'손전등 오류'**
   String get flashlightError;
 
+  /// No description provided for @minuteShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'분'**
+  String get minuteShort;
+
+  /// No description provided for @hourShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'시'**
+  String get hourShort;
+
   /// No description provided for @privacyPolicyUrl.
   ///
   /// In ko, this message translates to:
@@ -767,6 +779,210 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'초기화'**
   String get reset;
+
+  /// No description provided for @reviewTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'캣송이 마음에 드시나요?'**
+  String get reviewTitle;
+
+  /// No description provided for @reviewMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'별점을 남겨주시면\n앱 개선에 큰 도움이 됩니다 😊'**
+  String get reviewMessage;
+
+  /// No description provided for @reviewButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'⭐ 평점 남기기'**
+  String get reviewButton;
+
+  /// No description provided for @reviewLater.
+  ///
+  /// In ko, this message translates to:
+  /// **'나중에 할게요'**
+  String get reviewLater;
+
+  /// No description provided for @fontDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 폰트'**
+  String get fontDefault;
+
+  /// No description provided for @fontNotoSans.
+  ///
+  /// In ko, this message translates to:
+  /// **'Noto Sans KR (깔끔)'**
+  String get fontNotoSans;
+
+  /// No description provided for @fontJua.
+  ///
+  /// In ko, this message translates to:
+  /// **'Jua (귀여운)'**
+  String get fontJua;
+
+  /// No description provided for @fontGaegu.
+  ///
+  /// In ko, this message translates to:
+  /// **'Gaegu (손글씨)'**
+  String get fontGaegu;
+
+  /// No description provided for @fontNanumGothic.
+  ///
+  /// In ko, this message translates to:
+  /// **'Nanum Gothic (부드러운)'**
+  String get fontNanumGothic;
+
+  /// No description provided for @fontDoHyeon.
+  ///
+  /// In ko, this message translates to:
+  /// **'Do Hyeon (모던)'**
+  String get fontDoHyeon;
+
+  /// No description provided for @fontCuteFont.
+  ///
+  /// In ko, this message translates to:
+  /// **'Cute Font (귀여운)'**
+  String get fontCuteFont;
+
+  /// No description provided for @fontStylish.
+  ///
+  /// In ko, this message translates to:
+  /// **'Stylish (세련된)'**
+  String get fontStylish;
+
+  /// No description provided for @fontSunflower.
+  ///
+  /// In ko, this message translates to:
+  /// **'Sunflower (가벼운)'**
+  String get fontSunflower;
+
+  /// No description provided for @fontHiMelody.
+  ///
+  /// In ko, this message translates to:
+  /// **'Hi Melody (감성적)'**
+  String get fontHiMelody;
+
+  /// No description provided for @fontPoorStory.
+  ///
+  /// In ko, this message translates to:
+  /// **'Poor Story (손글씨)'**
+  String get fontPoorStory;
+
+  /// No description provided for @fontEastSeaDokdo.
+  ///
+  /// In ko, this message translates to:
+  /// **'East Sea Dokdo (독특한)'**
+  String get fontEastSeaDokdo;
+
+  /// No description provided for @fontNanumBrush.
+  ///
+  /// In ko, this message translates to:
+  /// **'Nanum Brush Script (붓글씨)'**
+  String get fontNanumBrush;
+
+  /// No description provided for @fontNanumMyeongjo.
+  ///
+  /// In ko, this message translates to:
+  /// **'Nanum Myeongjo (명조체)'**
+  String get fontNanumMyeongjo;
+
+  /// No description provided for @fontBlackAndWhite.
+  ///
+  /// In ko, this message translates to:
+  /// **'Black And White Picture (특이한)'**
+  String get fontBlackAndWhite;
+
+  /// No description provided for @fontGowunDodum.
+  ///
+  /// In ko, this message translates to:
+  /// **'Gowun Dodum (도담도담)'**
+  String get fontGowunDodum;
+
+  /// No description provided for @fontGowunBatang.
+  ///
+  /// In ko, this message translates to:
+  /// **'Gowun Batang (바탕체)'**
+  String get fontGowunBatang;
+
+  /// No description provided for @fontNanumPen.
+  ///
+  /// In ko, this message translates to:
+  /// **'Nanum Pen Script (펜글씨)'**
+  String get fontNanumPen;
+
+  /// No description provided for @fontSingleDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'Single Day (귀여운)'**
+  String get fontSingleDay;
+
+  /// No description provided for @fontYeonSung.
+  ///
+  /// In ko, this message translates to:
+  /// **'Yeon Sung (연성체)'**
+  String get fontYeonSung;
+
+  /// No description provided for @styleCD.
+  ///
+  /// In ko, this message translates to:
+  /// **'CD 회전'**
+  String get styleCD;
+
+  /// No description provided for @styleCDDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'클래식한 CD 회전 애니메이션'**
+  String get styleCDDesc;
+
+  /// No description provided for @styleCassette.
+  ///
+  /// In ko, this message translates to:
+  /// **'카세트 테이프'**
+  String get styleCassette;
+
+  /// No description provided for @styleCassetteDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'레트로 카세트 테이프'**
+  String get styleCassetteDesc;
+
+  /// No description provided for @styleCard.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범아트 카드'**
+  String get styleCard;
+
+  /// No description provided for @styleCardDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'심플한 앨범아트 카드형'**
+  String get styleCardDesc;
+
+  /// No description provided for @styleVisualizer.
+  ///
+  /// In ko, this message translates to:
+  /// **'파형 비주얼라이저'**
+  String get styleVisualizer;
+
+  /// No description provided for @styleVisualizerDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'음파 애니메이션'**
+  String get styleVisualizerDesc;
+
+  /// No description provided for @styleGradient.
+  ///
+  /// In ko, this message translates to:
+  /// **'그라데이션'**
+  String get styleGradient;
+
+  /// No description provided for @styleGradientDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범아트 색상 그라데이션 배경'**
+  String get styleGradientDesc;
 }
 
 class _AppLocalizationsDelegate

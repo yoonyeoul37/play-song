@@ -318,6 +318,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get flashlightError => '手電筒錯誤';
 
   @override
+  String get minuteShort => '分';
+
+  @override
+  String get hourShort => '時';
+
+  @override
   String get privacyPolicyUrl => 'https://www.ssing.kr/privacy_policy_zh.html';
 
   @override
@@ -341,4 +347,106 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reset => '重置';
+
+  @override
+  String get reviewTitle => '您喜歡 cat song 嗎？';
+
+  @override
+  String get reviewMessage => '請留下評分！\n這將幫助我們改善應用程式 😊';
+
+  @override
+  String get reviewButton => '⭐ 留下評分';
+
+  @override
+  String get reviewLater => '稍後再說';
+
+  @override
+  String get fontDefault => '預設字體';
+
+  @override
+  String get fontNotoSans => 'Noto Sans KR (簡潔)';
+
+  @override
+  String get fontJua => 'Jua (可愛)';
+
+  @override
+  String get fontGaegu => 'Gaegu (手寫)';
+
+  @override
+  String get fontNanumGothic => 'Nanum Gothic (柔和)';
+
+  @override
+  String get fontDoHyeon => 'Do Hyeon (現代)';
+
+  @override
+  String get fontCuteFont => 'Cute Font (可愛)';
+
+  @override
+  String get fontStylish => 'Stylish (優雅)';
+
+  @override
+  String get fontSunflower => 'Sunflower (輕盈)';
+
+  @override
+  String get fontHiMelody => 'Hi Melody (感性)';
+
+  @override
+  String get fontPoorStory => 'Poor Story (手寫)';
+
+  @override
+  String get fontEastSeaDokdo => 'East Sea Dokdo (獨特)';
+
+  @override
+  String get fontNanumBrush => 'Nanum Brush Script (毛筆)';
+
+  @override
+  String get fontNanumMyeongjo => 'Nanum Myeongjo (明體)';
+
+  @override
+  String get fontBlackAndWhite => 'Black And White Picture (特別)';
+
+  @override
+  String get fontGowunDodum => 'Gowun Dodum (圓潤)';
+
+  @override
+  String get fontGowunBatang => 'Gowun Batang (仿宋)';
+
+  @override
+  String get fontNanumPen => 'Nanum Pen Script (鋼筆)';
+
+  @override
+  String get fontSingleDay => 'Single Day (可愛)';
+
+  @override
+  String get fontYeonSung => 'Yeon Sung (柔和)';
+
+  @override
+  String get styleCD => 'CD旋轉';
+
+  @override
+  String get styleCDDesc => '經典CD旋轉動畫';
+
+  @override
+  String get styleCassette => '卡帶';
+
+  @override
+  String get styleCassetteDesc => '復古卡帶風格';
+
+  @override
+  String get styleCard => '專輯封面卡片';
+
+  @override
+  String get styleCardDesc => '簡約專輯封面卡片';
+
+  @override
+  String get styleVisualizer => '波形視覺化';
+
+  @override
+  String get styleVisualizerDesc => '音波動畫';
+
+  @override
+  String get styleGradient => '漸層';
+
+  @override
+  String get styleGradientDesc => '專輯封面顏色漸層背景';
 }

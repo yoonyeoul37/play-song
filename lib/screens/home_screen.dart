@@ -91,31 +91,112 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
               child: Container(
-                margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFFD4AF37).withOpacity(0.2),
-                      const Color(0xFFD4AF37).withOpacity(0.1),
+                      const Color(0xFF2A2200),
+                      const Color(0xFF1A1500),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.6), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withOpacity(0.15),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.card_giftcard, color: Color(0xFFD4AF37), size: 20),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Text(
-                        '🎵 출시 기념! 프로모션 코드 입력하고 광고 없이 즐기세요!',
-                        style: TextStyle(color: Color(0xFFD4AF37), fontSize: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD4AF37).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.card_giftcard, color: Color(0xFFD4AF37), size: 20),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '🎉 출시 기념 이벤트!',
+                                style: TextStyle(
+                                  color: Color(0xFFD4AF37),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                '프로모션 코드 입력하고 광고 없이 즐기세요',
+                                style: TextStyle(color: Color(0xFFCCCCCC), fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _showBanner = false),
+                          child: const Icon(Icons.close, color: Color(0xFF888888), size: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
+                      ),
+                      child: const Column(
+                        children: [
+                          Text(
+                            '프로모션 코드',
+                            style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 11),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '37258',
+                            style: TextStyle(
+                              color: Color(0xFFD4AF37),
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 8,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => setState(() => _showBanner = false),
-                      child: const Icon(Icons.close, color: Color(0xFFD4AF37), size: 16),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        '지금 코드 입력하기 →',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -464,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: (index) => setState(() => _currentTabIndex = index),
       backgroundColor: const Color(0xFF0A0A0A),
       selectedItemColor: primaryColor,
-      unselectedItemColor: AppTheme.textHint,
+      unselectedItemColor: AppTheme.textSecondary,
       type: BottomNavigationBarType.fixed,
       selectedFontSize: 10,
       unselectedFontSize: 10,
