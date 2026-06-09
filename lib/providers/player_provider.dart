@@ -10,7 +10,7 @@ class PlayerProvider extends ChangeNotifier {
   AudioHandler? _audioHandler;
   Function(Song)? onSongPlayed;
   Function(Song)? onSongChanged;
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
 
   List<Song> _queue = [];
   int _currentIndex = -1;

@@ -1,4 +1,4 @@
-package com.example.mp3_player
+package kr.ssing.catsong
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -45,15 +45,15 @@ class PlayerWidget : AppWidgetProvider() {
     }
 
     companion object {
-        const val ACTION_PLAY_PAUSE = "com.example.mp3_player.PLAY_PAUSE"
-        const val ACTION_NEXT = "com.example.mp3_player.NEXT"
-        const val ACTION_PREV = "com.example.mp3_player.PREV"
+        const val ACTION_PLAY_PAUSE = "kr.ssing.catsong.PLAY_PAUSE"
+        const val ACTION_NEXT = "kr.ssing.catsong.NEXT"
+        const val ACTION_PREV = "kr.ssing.catsong.PREV"
 
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
-            title: String = "플레이쏭",
+            title: String = "캣송",
             artist: String = "음악을 재생해보세요",
             isPlaying: Boolean = false
         ) {

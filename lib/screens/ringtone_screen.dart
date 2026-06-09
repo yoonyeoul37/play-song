@@ -16,7 +16,7 @@ class RingtoneScreen extends StatefulWidget {
 }
 
 class _RingtoneScreenState extends State<RingtoneScreen> {
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
   Song? _selectedSong;
   double _startValue = 0.0;
   double _endValue = 30.0;

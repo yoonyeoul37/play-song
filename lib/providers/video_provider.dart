@@ -7,7 +7,7 @@ class VideoProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _errorMessage = '';
 
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
 
   List<Video> get videos => _videos;
   bool get isLoading => _isLoading;

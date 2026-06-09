@@ -13,7 +13,7 @@ class EqualizerScreen extends StatefulWidget {
 }
 
 class _EqualizerScreenState extends State<EqualizerScreen> {
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
 
   bool _isLoading = true;
   int _numBands = 0;

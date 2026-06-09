@@ -112,7 +112,7 @@ class _VideoTile extends StatefulWidget {
 }
 
 class _VideoTileState extends State<_VideoTile> {
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
   Uint8List? _thumbnail;
 
   @override
@@ -468,7 +468,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                               ),
                             );
                             if (newName != null && newName.isNotEmpty) {
-                              await const MethodChannel('com.example.mp3_player/media')
+                              await const MethodChannel('kr.ssing.catsong/media')
                                   .invokeMethod('renameVideo', {
                                 'uri': widget.video.uri,
                                 'newName': newName,
@@ -500,7 +500,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   ),
                 );
                 if (confirm == true) {
-                  await const MethodChannel('com.example.mp3_player/media')
+                  await const MethodChannel('kr.ssing.catsong/media')
                       .invokeMethod(
                           'deleteVideo', {'uri': widget.video.uri});
                   Navigator.pop(context);

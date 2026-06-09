@@ -75,9 +75,9 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.mp3_player.PLAY_PAUSE" />
-                <action android:name="com.example.mp3_player.NEXT" />
-                <action android:name="com.example.mp3_player.PREV" />
+                <action android:name="kr.ssing.catsong.PLAY_PAUSE" />
+                <action android:name="kr.ssing.catsong.NEXT" />
+                <action android:name="kr.ssing.catsong.PREV" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -89,9 +89,9 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.mp3_player.PLAY_PAUSE" />
-                <action android:name="com.example.mp3_player.NEXT" />
-                <action android:name="com.example.mp3_player.PREV" />
+                <action android:name="kr.ssing.catsong.PLAY_PAUSE" />
+                <action android:name="kr.ssing.catsong.NEXT" />
+                <action android:name="kr.ssing.catsong.PREV" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -103,9 +103,9 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.example.mp3_player.PLAY_PAUSE" />
-                <action android:name="com.example.mp3_player.NEXT" />
-                <action android:name="com.example.mp3_player.PREV" />
+                <action android:name="kr.ssing.catsong.PLAY_PAUSE" />
+                <action android:name="kr.ssing.catsong.NEXT" />
+                <action android:name="kr.ssing.catsong.PREV" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

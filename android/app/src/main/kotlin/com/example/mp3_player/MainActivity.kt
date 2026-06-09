@@ -1,4 +1,4 @@
-package com.example.mp3_player
+package kr.ssing.catsong
 
 import android.content.ContentValues
 import android.graphics.Bitmap
@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {
-    private val CHANNEL = "com.example.mp3_player/media"
+    private val CHANNEL = "kr.ssing.catsong/media"
     private var equalizer: Equalizer? = null
     private var bassBoost: android.media.audiofx.BassBoost? = null
     private var virtualizer: android.media.audiofx.Virtualizer? = null

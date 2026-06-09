@@ -374,7 +374,7 @@ class SongListTile extends StatelessWidget {
               Navigator.pop(ctx);
               try {
                 if (song.uri != null) {
-                  const platform = MethodChannel('com.example.mp3_player/media');
+                  const platform = MethodChannel('kr.ssing.catsong/media');
                   final result = await platform.invokeMethod('deleteSong', {'uri': song.uri});
                   if (result == true) {
                     context.read<MusicProvider>().loadSongs();

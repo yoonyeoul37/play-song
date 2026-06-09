@@ -16,7 +16,7 @@ class MusicProvider extends ChangeNotifier {
   Set<int> _favoriteIds = {};
   List<Song> _recentSongs = [];
   List<MusicFolder> _folders = [];
-  static const _channel = MethodChannel('com.example.mp3_player/media');
+  static const _channel = MethodChannel('kr.ssing.catsong/media');
   bool _isLoading = false;
   bool _hasPermission = false;
   String _errorMessage = '';

@@ -204,7 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: AppLocalizations.of(context)!.widget,
                 subtitle: AppLocalizations.of(context)!.widget,
                 onTap: () async {
-                  final platform = MethodChannel('com.example.mp3_player/media');
+                  final platform = MethodChannel('kr.ssing.catsong/media');
                   try {
                     await platform.invokeMethod('requestWidgetAdd');
                   } catch (e) {}

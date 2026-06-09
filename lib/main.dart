@@ -28,7 +28,7 @@ void main() async {
   globalAudioHandler = await AudioService.init(
     builder: () => SimpleAudioHandler(playerProvider),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.example.mp3_player.audio',
+      androidNotificationChannelId: 'kr.ssing.catsong.audio',
       androidNotificationChannelName: 'MP3 Player',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,

@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (lastShown == today) return;
 
     await prefs.setString('banner_last_shown', today);
-    setState(() => _showBanner = true);
+    // setState(() => _showBanner = true);
   }
 
   @override
